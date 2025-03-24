@@ -1,5 +1,7 @@
 package com.mibanco.customkeyboard.safeKeyboard
 
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,14 +22,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun SafeInputScreen() {
+//    EnableSecureFlag()
+
     var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -34,7 +41,7 @@ fun SafeInputScreen() {
     var keyboardVisible by remember { mutableStateOf(false) }
 
     SafeKeyboardScaffold(
-        keyboardType = keyboardType,) { onOpenKeyboard, password, setPassword, isKeyboardVisible  ->
+        keyboardType = keyboardType,) { onOpenKeyboard, password, setPassword ->
 
         Column(
             modifier = Modifier
@@ -74,6 +81,20 @@ fun SafeInputScreen() {
                 Text("Cambiar Teclado")
             }
         }
+    }
+}
+
+@Composable
+fun EnableSecureFlag() {
+    val context = LocalContext.current
+    val view = LocalView.current
+
+    SideEffect {
+        val activity = context as? ComponentActivity
+        activity?.window?.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
     }
 }
 

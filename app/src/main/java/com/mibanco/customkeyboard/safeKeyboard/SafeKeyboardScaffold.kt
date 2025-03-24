@@ -1,5 +1,6 @@
 package com.mibanco.customkeyboard.safeKeyboard
 
+import android.view.WindowManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,23 +9,26 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ComponentActivity
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SafeKeyboardScaffold(
     keyboardType: KeyboardType,
-    content: @Composable (onOpenKeyboard: () -> Unit, password: TextFieldValue, setPassword: (TextFieldValue) -> Unit, isKeyboardVisible: Boolean) -> Unit
+    content: @Composable (onOpenKeyboard: () -> Unit, password: TextFieldValue, setPassword: (TextFieldValue) -> Unit) -> Unit
 ) {
     var isKeyboardVisible by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
@@ -46,17 +50,30 @@ fun SafeKeyboardScaffold(
                     { isKeyboardVisible = true },
                     inputText,
                     { inputText = it },
-                    isKeyboardVisible
                 )
             }
         }
     )
 
     if (isKeyboardVisible) {
+
+        val context = LocalContext.current
+        SideEffect {
+            val activity = context as? ComponentActivity
+            activity?.window?.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+        }
+
         ModalBottomSheet(
             onDismissRequest = {
                 isKeyboardVisible = false
                 focusManager.clearFocus(force = true)
+
+                // 🔓 Desactiva FLAG_SECURE al cerrar el teclado
+                val activity = context as? ComponentActivity
+                activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             }
         ) {
             SafeKeyboard(
@@ -83,6 +100,9 @@ fun SafeKeyboardScaffold(
                 onEnter = {
                     isKeyboardVisible = false
                     focusManager.clearFocus(force = true)
+
+                    val activity = context as? ComponentActivity
+                    activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 },
                 onShiftToggle = { isUpperCase = !isUpperCase },
                 isUpperCase = isUpperCase
