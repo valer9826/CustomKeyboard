@@ -52,7 +52,7 @@ fun SafeInputScreen() {
         ) {
             Text(text = "Ingresa tu valor:", fontSize = 20.sp)
 
-            SafePasswordTextfield(
+            SafePasswordTextField(
                 value = password,
                 onValueChange = { setPassword(it) },
                 modifier = Modifier
