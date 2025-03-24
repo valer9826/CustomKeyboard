@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.keyboard
+package com.mibanco.customkeyboard.safeKeyboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -28,7 +29,7 @@ fun SafeInputScreen() {
     var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    SafeKeyboardScaffold(keyboardType = keyboardType) { onOpenKeyboard, text, setText ->
+    SafeKeyboardScaffold(keyboardType = keyboardType) { onOpenKeyboard, password, setPassword ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -39,8 +40,8 @@ fun SafeInputScreen() {
             Text(text = "Ingresa tu valor:", fontSize = 20.sp)
 
             TextField(
-                value = text,
-                onValueChange = { setText(it) },
+                value = password,
+                onValueChange = { setPassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged { focusState ->
@@ -50,7 +51,8 @@ fun SafeInputScreen() {
                         }
                     },
                 readOnly = false,
-                label = { Text("Ingrese valor") }
+                label = { Text("Ingrese valor") },
+                visualTransformation = PasswordVisualTransformation()
             )
 
             Spacer(modifier = Modifier.height(16.dp))

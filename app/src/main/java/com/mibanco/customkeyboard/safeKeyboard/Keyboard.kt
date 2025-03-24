@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.keyboard
+package com.mibanco.customkeyboard.safeKeyboard
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState

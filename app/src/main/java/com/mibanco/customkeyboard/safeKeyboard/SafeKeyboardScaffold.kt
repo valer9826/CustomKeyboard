@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.keyboard
+package com.mibanco.customkeyboard.safeKeyboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SafeKeyboardScaffold(
     keyboardType: KeyboardType,
-    content: @Composable (onOpenKeyboard: () -> Unit, text: TextFieldValue, setText: (TextFieldValue) -> Unit) -> Unit
+    content: @Composable (onOpenKeyboard: () -> Unit, password: TextFieldValue, setPassword: (TextFieldValue) -> Unit) -> Unit
 ) {
     var isKeyboardVisible by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
