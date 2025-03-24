@@ -13,9 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
+import androidx.compose.material.icons.filled.KeyboardCapslock
+import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextRange
@@ -41,19 +48,17 @@ import com.mibanco.customkeyboard.ui.theme.CustomKeyboardTheme
 
 @Composable
 fun KeyboardButton(
-    text: String,
-    onClick: (String) -> Unit,
+    text: String? = null,
+    icon: ImageVector? = null,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = Color(0xFFE0E0E0),
     isUpperCase: Boolean = false
 ) {
-    val displayText = when (text) {
-        "espacio" -> "␣"
-        else -> if (isUpperCase && text.length == 1 && text[0].isLetter()) {
-            text.uppercase()
-        } else {
-            text
-        }
+    val displayText = if (isUpperCase && text?.length == 1 && text[0].isLetter()) {
+        text.uppercase()
+    } else {
+        text
     }
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -62,7 +67,7 @@ fun KeyboardButton(
     val backgroundColor = if (isPressed) Color(0xFFBDBDBD) else containerColor
 
     Button(
-        onClick = { onClick(text) },
+        onClick = onClick,
         modifier = modifier
             .padding(2.dp)
             .height(48.dp),
@@ -74,12 +79,15 @@ fun KeyboardButton(
         interactionSource = interactionSource,
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
     ) {
-        Text(
-            text = displayText,
-            fontSize = 16.sp,
-            maxLines = 1,
-            color = Color.Black
-        )
+        when {
+            icon != null -> Icon(icon, contentDescription = text ?: "", tint = Color.Black)
+            displayText != null -> Text(
+                text = displayText,
+                fontSize = 16.sp,
+                maxLines = 1,
+                color = Color.Black
+            )
+        }
     }
 }
 
@@ -96,7 +104,7 @@ fun KeyboardRow(
         keys.forEach { key ->
             KeyboardButton(
                 text = key,
-                onClick = onKeyPress,
+                onClick = { onKeyPress(key) },
                 isUpperCase = isUpperCase,
                 modifier = Modifier.weight(1f),
             )
@@ -109,8 +117,8 @@ fun CustomAlphaKeyboard(
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
     onEnter: () -> Unit,
-    onShiftToggle: (() -> Unit)?,
-    isUpperCase: Boolean
+    onShiftToggle: (() -> Unit)? = null,
+    isUpperCase: Boolean = false
 ) {
     val randomNumbers = remember { (0..9).map { it.toString() }.shuffled() }
     val allLetters = ('a'..'z').toMutableList().apply { remove('ñ') }
@@ -120,13 +128,14 @@ fun CustomAlphaKeyboard(
     val row2 = shuffledLetters.drop(10).take(10)
     val row3Letters = shuffledLetters.drop(20).take(7)
 
-    val transformKey: (String) -> Unit = { key ->
-        when (key) {
-            "⇧" -> onShiftToggle?.invoke()
-            "←" -> onDelete()
-            "✔" -> onEnter()
-            "espacio" -> onKeyPress(" ")
-            else -> onKeyPress(if (isUpperCase) key.uppercase() else key)
+    val transformKey: (String?, ImageVector?) -> Unit = { text, icon ->
+        when (icon) {
+            Icons.Filled.KeyboardCapslock -> onShiftToggle?.invoke()
+            Icons.AutoMirrored.Filled.Backspace -> onDelete()
+            Icons.AutoMirrored.Filled.KeyboardReturn -> onEnter()
+            Icons.Filled.SpaceBar -> onKeyPress(" ")
+            null -> text?.let { onKeyPress(if (isUpperCase) it.uppercase() else it) }
+            else -> {}
         }
     }
 
@@ -136,40 +145,55 @@ fun CustomAlphaKeyboard(
             .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Números aleatorios
-        KeyboardRow(keys = randomNumbers, onKeyPress = transformKey)
-
-        // Letras
-        KeyboardRow(keys = row1, onKeyPress = transformKey, isUpperCase = isUpperCase)
-        KeyboardRow(keys = row2, onKeyPress = transformKey, isUpperCase = isUpperCase)
-
-        // Shift + letras + delete
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            randomNumbers.forEach {
+                KeyboardButton(
+                    text = it,
+                    onClick = { transformKey(it, null) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            row1.forEach {
+                KeyboardButton(
+                    text = it,
+                    onClick = { transformKey(it, null) },
+                    isUpperCase = isUpperCase,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            row2.forEach {
+                KeyboardButton(
+                    text = it,
+                    onClick = { transformKey(it, null) },
+                    isUpperCase = isUpperCase,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
             KeyboardButton(
-                text = "⇧",
-                onClick = transformKey,
-                isUpperCase = isUpperCase,
+                icon = Icons.Filled.KeyboardCapslock,
+                onClick = { transformKey(null, Icons.Filled.KeyboardCapslock) },
                 modifier = Modifier.weight(1f)
             )
-            row3Letters.forEach { letter ->
+            row3Letters.forEach {
                 KeyboardButton(
-                    text = letter,
-                    onClick = transformKey,
+                    text = it,
+                    onClick = { transformKey(it, null) },
                     isUpperCase = isUpperCase,
                     modifier = Modifier.weight(1f)
                 )
             }
             KeyboardButton(
-                text = "←",
-                onClick = transformKey,
+                icon = Icons.AutoMirrored.Filled.Backspace,
+                onClick = { transformKey(null, Icons.AutoMirrored.Filled.Backspace) },
                 modifier = Modifier.weight(1f)
             )
         }
-
-        // Espacio + enter
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -177,14 +201,14 @@ fun CustomAlphaKeyboard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             KeyboardButton(
-                text = "espacio",
-                onClick = transformKey,
+                icon = Icons.Filled.SpaceBar,
+                onClick = { transformKey(" ", Icons.Filled.SpaceBar) },
                 modifier = Modifier.weight(2f)
             )
             Spacer(modifier = Modifier.width(8.dp))
             KeyboardButton(
-                text = "✔",
-                onClick = transformKey,
+                icon = Icons.AutoMirrored.Filled.KeyboardReturn,
+                onClick = { transformKey(null, Icons.AutoMirrored.Filled.KeyboardReturn) },
                 modifier = Modifier.weight(1f)
             )
         }
@@ -197,9 +221,9 @@ fun CustomNumericKeyboard(
     onDelete: () -> Unit,
     onEnter: () -> Unit
 ) {
-    val numbers = remember { (1..9).map { it.toString() }.shuffled() }
-
-    val rows = numbers.chunked(3) + listOf(listOf(",", "0", "."))
+    val numbers = remember { (0..9).map { it.toString() }.shuffled() }
+    val digits = numbers + listOf(",", ".")
+    val numberRows = digits.chunked(3)
 
     Column(
         modifier = Modifier
@@ -208,29 +232,43 @@ fun CustomNumericKeyboard(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        rows.forEach { row ->
-            KeyboardRow(keys = row, onKeyPress = onKeyPress)
-        }
+        numberRows.forEachIndexed { index, row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                row.forEach {
+                    KeyboardButton(
+                        text = it,
+                        onClick = { onKeyPress(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            KeyboardButton(
-                text = "←",
-                onClick = { onDelete() },
-                modifier = Modifier.weight(1f)
-            )
-            KeyboardButton(
-                text = "✔",
-                onClick = { onEnter() },
-                modifier = Modifier.weight(1f)
-            )
+                val extraButton = when (index) {
+                    1 -> Icons.AutoMirrored.Filled.Backspace to { onDelete() }
+                    2 -> Icons.AutoMirrored.Filled.KeyboardReturn to { onEnter() }
+                    else -> null
+                }
+
+                if (extraButton != null) {
+                    KeyboardButton(
+                        icon = extraButton.first,
+                        onClick = extraButton.second,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    KeyboardButton(
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        containerColor = Color.Transparent
+                    )
+                }
+            }
         }
     }
 }
+
 
 @Composable
 fun CustomKeyboard(
