@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
@@ -26,38 +27,39 @@ fun SafePasswordTextfield(
     keyboardVisible: Boolean
 ) {
     var hasFocus by remember { mutableStateOf(false) }
+    var cursorManuallyMoved by remember { mutableStateOf(false) }
 
-    val isCursorVisible = hasFocus && keyboardVisible
-    val cursorIndex = if (isCursorVisible) {
+    val cursorIndex = if (hasFocus) {
         value.selection.start.coerceIn(0, value.text.length)
     } else -1
 
-    val maskedTransformation = VisualTransformation { text ->
-        val maskedBuilder = buildString {
-            text.text.forEachIndexed { i, _ ->
-                if (i == cursorIndex) append('|')
+    // Si el TextField se enfoca y el cursor no fue movido manualmente, lo llevamos al final
+    if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
+        onValueChange(
+            value.copy(selection = TextRange(value.text.length))
+        )
+    }
+
+    val transformedText = remember(value.text, cursorIndex) {
+        val maskedText = buildString {
+            value.text.forEachIndexed { index, _ ->
+                if (index == cursorIndex) append('|')
                 append('•')
             }
-
-            // Mostrar cursor al final si está justo después del último carácter
-            if (cursorIndex == text.text.length) {
-                append('|')
-            }
+            if (cursorIndex == value.text.length) append('|')
         }
-
-        val maskedText = maskedBuilder.toString()
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                return offset + if (isCursorVisible && offset >= cursorIndex) 1 else 0
+                return offset + if (cursorIndex in 0..<offset) 1 else 0
             }
 
             override fun transformedToOriginal(offset: Int): Int {
-                if (!isCursorVisible) return offset.coerceAtMost(text.text.length)
                 return when {
+                    cursorIndex < 0 -> offset.coerceAtMost(value.text.length)
                     offset <= cursorIndex -> offset
                     offset == cursorIndex + 1 -> cursorIndex
-                    else -> text.text.length
+                    else -> value.text.length
                 }
             }
         }
@@ -67,26 +69,28 @@ fun SafePasswordTextfield(
 
     TextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = {
+            // Detecta si el usuario cambió el cursor a otro lugar (manual)
+            if (it.selection.start != value.selection.start) {
+                cursorManuallyMoved = true
+            }
+            onValueChange(it)
+        },
         label = { Text("Ingrese valor") },
         readOnly = true,
-        visualTransformation = maskedTransformation,
+        visualTransformation = VisualTransformation { transformedText },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         modifier = modifier.onFocusChanged { focusState ->
             hasFocus = focusState.isFocused
+
+            if (!focusState.isFocused) {
+                cursorManuallyMoved = false
+            }
+
             if (focusState.isFocused && !keyboardVisible) {
                 onOpenKeyboard()
             }
         }
     )
 }
-
-
-
-
-
-
-
-
-
 
