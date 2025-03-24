@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SafeKeyboardScaffold(
     keyboardType: KeyboardType,
-    content: @Composable (onOpenKeyboard: () -> Unit, password: TextFieldValue, setPassword: (TextFieldValue) -> Unit) -> Unit
+    content: @Composable (onOpenKeyboard: () -> Unit, password: TextFieldValue, setPassword: (TextFieldValue) -> Unit, isKeyboardVisible: Boolean) -> Unit
 ) {
     var isKeyboardVisible by remember { mutableStateOf(false) }
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
@@ -45,7 +45,8 @@ fun SafeKeyboardScaffold(
                 content(
                     { isKeyboardVisible = true },
                     inputText,
-                    { inputText = it }
+                    { inputText = it },
+                    isKeyboardVisible
                 )
             }
         }
