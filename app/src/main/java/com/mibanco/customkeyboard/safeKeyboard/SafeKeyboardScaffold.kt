@@ -71,7 +71,6 @@ fun SafeKeyboardScaffold(
                 isKeyboardVisible = false
                 focusManager.clearFocus(force = true)
 
-                // 🔓 Desactiva FLAG_SECURE al cerrar el teclado
                 val activity = context as? ComponentActivity
                 activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
             }

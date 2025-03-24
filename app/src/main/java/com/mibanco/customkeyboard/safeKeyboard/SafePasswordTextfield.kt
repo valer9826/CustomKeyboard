@@ -24,7 +24,7 @@ fun SafePasswordTextField(
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
     onOpenKeyboard: () -> Unit,
-    keyboardVisible: Boolean
+    isKeyboardVisible: Boolean
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
@@ -33,7 +33,6 @@ fun SafePasswordTextField(
         value.selection.start.coerceIn(0, value.text.length)
     } else -1
 
-    // Si el TextField se enfoca y el cursor no fue movido manualmente, lo llevamos al final
     if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
         onValueChange(
             value.copy(selection = TextRange(value.text.length))
@@ -70,7 +69,6 @@ fun SafePasswordTextField(
     TextField(
         value = value,
         onValueChange = {
-            // Detecta si el usuario cambió el cursor a otro lugar (manual)
             if (it.selection.start != value.selection.start) {
                 cursorManuallyMoved = true
             }
@@ -87,7 +85,7 @@ fun SafePasswordTextField(
                 cursorManuallyMoved = false
             }
 
-            if (focusState.isFocused && !keyboardVisible) {
+            if (focusState.isFocused && !isKeyboardVisible) {
                 onOpenKeyboard()
             }
         }

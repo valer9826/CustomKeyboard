@@ -24,7 +24,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,10 +34,9 @@ fun SafeInputScreen() {
 //    EnableSecureFlag()
 
     var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
-    val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
-    var keyboardVisible by remember { mutableStateOf(false) }
+    var isKeyboardVisible by remember { mutableStateOf(false) }
 
     SafeKeyboardScaffold(
         keyboardType = keyboardType,) { onOpenKeyboard, password, setPassword ->
@@ -60,13 +58,12 @@ fun SafeInputScreen() {
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         if (focusState.isFocused) {
-                            keyboardController?.hide()
                             onOpenKeyboard()
                         }
                     },
-                keyboardVisible = keyboardVisible,
+                isKeyboardVisible = isKeyboardVisible,
                 onOpenKeyboard = {
-                    keyboardVisible = true
+                    isKeyboardVisible = true
                     onOpenKeyboard()
                 },
             )
