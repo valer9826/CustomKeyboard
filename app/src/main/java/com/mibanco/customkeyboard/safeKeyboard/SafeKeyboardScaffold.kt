@@ -23,7 +23,6 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ComponentActivity
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SafeKeyboardScaffold(

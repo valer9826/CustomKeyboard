@@ -38,8 +38,7 @@ fun SafeInputScreen() {
     val focusRequester = remember { FocusRequester() }
     var isKeyboardVisible by remember { mutableStateOf(false) }
 
-    SafeKeyboardScaffold(
-        keyboardType = keyboardType,) { onOpenKeyboard, password, setPassword ->
+    SafeKeyboardScaffold(keyboardType = keyboardType) { onOpenKeyboard, password, setPassword ->
 
         Column(
             modifier = Modifier
