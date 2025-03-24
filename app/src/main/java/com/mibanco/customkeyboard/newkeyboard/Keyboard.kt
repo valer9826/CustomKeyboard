@@ -112,10 +112,13 @@ fun CustomAlphaKeyboard(
     onShiftToggle: (() -> Unit)?,
     isUpperCase: Boolean
 ) {
-    val row1 = listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
-    val row2 = listOf("a", "s", "d", "f", "g", "h", "j", "k", "l", "ñ")
-    val row3 = listOf("⇧", "z", "x", "c", "v", "b", "n", "m", "←")
-    val row4 = listOf("espacio", "✔")
+    val randomNumbers = remember { (0..9).map { it.toString() }.shuffled() }
+    val allLetters = ('a'..'z').toMutableList().apply { remove('ñ') }
+    val shuffledLetters = remember { (allLetters + 'ñ').shuffled().map { it.toString() } }
+
+    val row1 = shuffledLetters.take(10)
+    val row2 = shuffledLetters.drop(10).take(10)
+    val row3Letters = shuffledLetters.drop(20).take(7)
 
     val transformKey: (String) -> Unit = { key ->
         when (key) {
@@ -133,10 +136,40 @@ fun CustomAlphaKeyboard(
             .padding(horizontal = 4.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        listOf(row1, row2, row3).forEach { row ->
-            KeyboardRow(keys = row, onKeyPress = transformKey, isUpperCase = isUpperCase)
+        // Números aleatorios
+        KeyboardRow(keys = randomNumbers, onKeyPress = transformKey)
+
+        // Letras
+        KeyboardRow(keys = row1, onKeyPress = transformKey, isUpperCase = isUpperCase)
+        KeyboardRow(keys = row2, onKeyPress = transformKey, isUpperCase = isUpperCase)
+
+        // Shift + letras + delete
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            KeyboardButton(
+                text = "⇧",
+                onClick = transformKey,
+                isUpperCase = isUpperCase,
+                modifier = Modifier.weight(1f)
+            )
+            row3Letters.forEach { letter ->
+                KeyboardButton(
+                    text = letter,
+                    onClick = transformKey,
+                    isUpperCase = isUpperCase,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            KeyboardButton(
+                text = "←",
+                onClick = transformKey,
+                modifier = Modifier.weight(1f)
+            )
         }
 
+        // Espacio + enter
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -157,7 +190,6 @@ fun CustomAlphaKeyboard(
         }
     }
 }
-
 
 @Composable
 fun CustomNumericKeyboard(
