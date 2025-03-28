@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material.icons.filled.KeyboardCapslock
 import androidx.compose.material.icons.filled.SpaceBar
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -200,7 +198,6 @@ fun CustomNumericKeyboard(
         verticalArrangement = Arrangement.spacedBy(1.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Primeras 3 filas con 3 números cada una
         rows.forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),

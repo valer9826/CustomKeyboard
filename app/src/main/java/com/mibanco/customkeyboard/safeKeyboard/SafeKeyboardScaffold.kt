@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextRange
@@ -55,7 +54,6 @@ fun SafeKeyboardScaffold(
             density = density,
             initialValue = SheetValue.Hidden,
             confirmValueChange = { newValue ->
-                // Evita que se oculte justo después de mostrar
                 newValue != SheetValue.Hidden || !isRequestingShow
             }
         )
@@ -75,8 +73,8 @@ fun SafeKeyboardScaffold(
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
         sheetPeekHeight = 0.dp,
-        sheetContainerColor = Color.White, // o el color de fondo deseado
-        sheetShape = RectangleShape,       // 🔥 Quita los bordes redondeados
+        sheetContainerColor = Color.White,
+        sheetShape = RectangleShape,
         sheetDragHandle = {},
         sheetContent = {
             Column(modifier = Modifier.padding(bottom = 12.dp)) {
@@ -120,7 +118,6 @@ fun SafeKeyboardScaffold(
                 .padding(16.dp)
                 .pointerInput(Unit) {
                     detectTapGestures {
-                        // Si el usuario toca fuera del TextField
                         if (scaffoldState.bottomSheetState.currentValue == SheetValue.Expanded) {
                             coroutineScope.launch {
                                 scaffoldState.bottomSheetState.hide()

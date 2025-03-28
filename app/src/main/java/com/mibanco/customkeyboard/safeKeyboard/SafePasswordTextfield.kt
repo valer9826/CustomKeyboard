@@ -1,6 +1,11 @@
 package com.mibanco.customkeyboard.safeKeyboard
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -31,74 +36,94 @@ fun SafePasswordTextField(
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
-    var cursorVisible by remember { mutableStateOf(true) }
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isCursorVisible by remember { mutableStateOf(true) }
     var lastInputTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-    val cursorIndex = if (hasFocus) value.selection.start.coerceIn(0, value.text.length) else -1
-
-    if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
-        onValueChange(value.copy(selection = TextRange(value.text.length)))
-    }
-
-    LaunchedEffect(value.text, value.selection) {
+    LaunchedEffect(value.text) {
         lastInputTime = System.currentTimeMillis()
-        cursorVisible = true
+        isCursorVisible = true
     }
 
     LaunchedEffect(hasFocus) {
-        cursorVisible = true
-        while (hasFocus) {
-            val elapsed = System.currentTimeMillis() - lastInputTime
-            cursorVisible = if (elapsed >= 500) {
-                !cursorVisible
-            } else {
-                true
+        if (hasFocus) {
+            while (true) {
+                delay(500)
+                val now = System.currentTimeMillis()
+                isCursorVisible = if (now - lastInputTime > 500) {
+                    !isCursorVisible
+                } else {
+                    true
+                }
             }
-            delay(450)
         }
     }
 
-    val maskedTransformation = remember(value.text, cursorIndex, cursorVisible) {
-        val masked = buildString {
-            value.text.forEachIndexed { i, _ ->
-                if (i == cursorIndex && cursorVisible) append('|')
-                append('•')
+    val cursorIndex = if (hasFocus) {
+        value.selection.start.coerceIn(0, value.text.length)
+    } else -1
+
+    if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
+        onValueChange(
+            value.copy(selection = TextRange(value.text.length))
+        )
+    }
+
+    val transformedText = remember(value.text, cursorIndex, isPasswordVisible, isCursorVisible) {
+        val builder = buildString {
+            value.text.forEachIndexed { index, char ->
+                if (index == cursorIndex && isCursorVisible) append('|')
+                append(if (isPasswordVisible) char else '•')
             }
-            if (cursorIndex == value.text.length && cursorVisible) append('|')
+            if (cursorIndex == value.text.length && isCursorVisible) append('|')
         }
 
         val offsetMapping = object : OffsetMapping {
             override fun originalToTransformed(offset: Int): Int {
-                return offset + if (cursorVisible && cursorIndex in 0..<offset) 1 else 0
+                return offset + if (cursorIndex in 0..<offset && isCursorVisible) 1 else 0
             }
 
             override fun transformedToOriginal(offset: Int): Int {
                 return when {
                     cursorIndex < 0 -> offset.coerceAtMost(value.text.length)
                     offset <= cursorIndex -> offset
-                    offset == cursorIndex + 1 && cursorVisible -> cursorIndex
+                    offset == cursorIndex + 1 && isCursorVisible -> cursorIndex
                     else -> value.text.length
                 }
             }
         }
 
-        TransformedText(AnnotatedString(masked), offsetMapping)
+        TransformedText(AnnotatedString(builder), offsetMapping)
     }
 
     TextField(
         value = value,
         onValueChange = {
-            if (it.selection.start != value.selection.start) cursorManuallyMoved = true
+            if (it.selection.start != value.selection.start) {
+                cursorManuallyMoved = true
+            }
             onValueChange(it)
         },
         label = { Text("Ingrese valor") },
         readOnly = true,
-        visualTransformation = VisualTransformation { maskedTransformation },
+        visualTransformation = VisualTransformation { transformedText },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        modifier = modifier.onFocusChanged { focus ->
-            hasFocus = focus.isFocused
-            if (!focus.isFocused) cursorManuallyMoved = false
-            if (focus.isFocused && !isKeyboardVisible) onOpenKeyboard()
+        modifier = modifier.onFocusChanged { focusState ->
+            hasFocus = focusState.isFocused
+            if (!focusState.isFocused) {
+                cursorManuallyMoved = false
+            }
+            if (focusState.isFocused && !isKeyboardVisible) {
+                onOpenKeyboard()
+            }
+        },
+        trailingIcon = {
+            IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                Icon(
+                    imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                )
+            }
         }
     )
 }
