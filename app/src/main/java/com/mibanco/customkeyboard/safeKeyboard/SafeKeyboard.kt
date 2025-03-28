@@ -36,7 +36,7 @@ fun KeyboardButton(
     icon: ImageVector? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = Color(0xFFE0E0E0),
+    containerColor: Color = Color(0xFFE7E3E3),
     isUpperCase: Boolean = false
 ) {
     val displayText = if (isUpperCase && text?.length == 1 && text[0].isLetter()) {
@@ -60,6 +60,7 @@ fun KeyboardButton(
             containerColor = backgroundColor,
             contentColor = Color.Black
         ),
+        elevation = ButtonDefaults.buttonElevation(1.dp),
         interactionSource = interactionSource,
         contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
     ) {
