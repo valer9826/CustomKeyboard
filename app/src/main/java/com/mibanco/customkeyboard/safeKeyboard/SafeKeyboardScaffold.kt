@@ -98,14 +98,6 @@ fun SafeKeyboardScaffold(
                             )
                         }
                     },
-                    onEnter = {
-                        coroutineScope.launch {
-                            isRequestingShow = false
-                            sheetState.hide()
-                        }
-                    },
-                    onShiftToggle = { isUpperCase = !isUpperCase },
-                    isUpperCase = isUpperCase
                 )
             }
         },

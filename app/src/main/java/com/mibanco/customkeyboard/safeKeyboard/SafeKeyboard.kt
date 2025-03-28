@@ -12,11 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.material.icons.automirrored.filled.KeyboardReturn
 import androidx.compose.material.icons.automirrored.outlined.Backspace
-import androidx.compose.material.icons.filled.KeyboardCapslock
-import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -103,37 +99,22 @@ fun KeyboardRow(
 @Composable
 fun CustomAlphaKeyboard(
     onKeyPress: (String) -> Unit,
-    onDelete: () -> Unit,
-    onEnter: () -> Unit,
-    onShiftToggle: (() -> Unit)? = null,
-    isUpperCase: Boolean = false
+    onDelete: () -> Unit
 ) {
     val randomNumbers = remember { (0..9).map { it.toString() }.shuffled() }
+
     val row1 = listOf("q", "w", "e", "r", "t", "y", "u", "i", "o", "p")
     val row2 = listOf("a", "s", "d", "f", "g", "h", "j", "k", "l", "ñ")
     val row3 = listOf("z", "x", "c", "v", "b", "n", "m")
 
-    val transformKey: (String?, ImageVector?) -> Unit = { text, icon ->
-        when (icon) {
-            Icons.Filled.KeyboardCapslock -> onShiftToggle?.invoke()
-            Icons.AutoMirrored.Filled.Backspace -> onDelete()
-            Icons.AutoMirrored.Filled.KeyboardReturn -> onEnter()
-            Icons.Filled.SpaceBar -> onKeyPress(" ")
-            null -> text?.let { onKeyPress(if (isUpperCase) it.uppercase() else it) }
-            else -> {}
-        }
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(1.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(horizontal = 8.dp, vertical = 8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             randomNumbers.forEach {
                 KeyboardButton(
@@ -149,7 +130,7 @@ fun CustomAlphaKeyboard(
         listOf(row1, row2).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 row.forEach { key ->
                     KeyboardButton(
@@ -162,21 +143,27 @@ fun CustomAlphaKeyboard(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
             row3.forEach { key ->
                 KeyboardButton(
                     text = key,
                     onClick = { onKeyPress(key) },
-                    modifier = Modifier.weight(0.5f)
+                    modifier = Modifier
+                        .weight(1f)
                 )
             }
 
             KeyboardButton(
                 icon = Icons.AutoMirrored.Outlined.Backspace,
                 onClick = onDelete,
-                modifier = Modifier.weight(1f)
+                containerColor = Color(0xFFC0C0C0),
+                modifier = Modifier
+                    .weight(1.3f)
+                    .padding(start = 1.dp)
             )
         }
     }
@@ -232,6 +219,7 @@ fun CustomNumericKeyboard(
             KeyboardButton(
                 icon = Icons.AutoMirrored.Outlined.Backspace,
                 onClick = onDelete,
+                containerColor = Color(0xFFC0C0C0),
                 modifier = Modifier
                     .weight(1f)
                     .height(44.dp)
@@ -245,9 +233,6 @@ fun SafeKeyboard(
     type: KeyboardType,
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
-    onEnter: () -> Unit,
-    onShiftToggle: (() -> Unit)? = null,
-    isUpperCase: Boolean = false
 ) {
     if (type == KeyboardType.Number) {
         CustomNumericKeyboard(
@@ -258,9 +243,6 @@ fun SafeKeyboard(
         CustomAlphaKeyboard(
             onKeyPress = onKeyPress,
             onDelete = onDelete,
-            onEnter = onEnter,
-            onShiftToggle = onShiftToggle,
-            isUpperCase = isUpperCase
         )
     }
 }
@@ -272,9 +254,6 @@ fun CustomAlphaKeyboardPreview() {
         CustomAlphaKeyboard(
             onKeyPress = {},
             onDelete = {},
-            onEnter = {},
-            onShiftToggle = {},
-            isUpperCase = false
         )
     }
 }
