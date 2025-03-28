@@ -79,35 +79,37 @@ fun SafeKeyboardScaffold(
         sheetShape = RectangleShape,       // 🔥 Quita los bordes redondeados
         sheetDragHandle = {},
         sheetContent = {
-            SafeKeyboard(
-                type = keyboardType,
-                onKeyPress = { key ->
-                    val index = inputText.selection.start
-                    val newText = inputText.text.substring(0, index) + key + inputText.text.substring(index)
-                    inputText = TextFieldValue(
-                        text = newText,
-                        selection = TextRange(index + key.length)
-                    )
-                },
-                onDelete = {
-                    val index = inputText.selection.start
-                    if (index > 0) {
-                        val newText = inputText.text.removeRange(index - 1, index)
+            Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                SafeKeyboard(
+                    type = keyboardType,
+                    onKeyPress = { key ->
+                        val index = inputText.selection.start
+                        val newText = inputText.text.substring(0, index) + key + inputText.text.substring(index)
                         inputText = TextFieldValue(
                             text = newText,
-                            selection = TextRange(index - 1)
+                            selection = TextRange(index + key.length)
                         )
-                    }
-                },
-                onEnter = {
-                    coroutineScope.launch {
-                        isRequestingShow = false
-                        sheetState.hide()
-                    }
-                },
-                onShiftToggle = { isUpperCase = !isUpperCase },
-                isUpperCase = isUpperCase
-            )
+                    },
+                    onDelete = {
+                        val index = inputText.selection.start
+                        if (index > 0) {
+                            val newText = inputText.text.removeRange(index - 1, index)
+                            inputText = TextFieldValue(
+                                text = newText,
+                                selection = TextRange(index - 1)
+                            )
+                        }
+                    },
+                    onEnter = {
+                        coroutineScope.launch {
+                            isRequestingShow = false
+                            sheetState.hide()
+                        }
+                    },
+                    onShiftToggle = { isUpperCase = !isUpperCase },
+                    isUpperCase = isUpperCase
+                )
+            }
         },
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
