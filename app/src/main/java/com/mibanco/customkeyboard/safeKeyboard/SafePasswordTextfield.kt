@@ -41,7 +41,8 @@ fun SafePasswordTextField(
     onKeyboardDismiss: () -> Unit,
     isKeyboardVisible: Boolean,
     bringIntoViewRequester: BringIntoViewRequester,
-    coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
+    keyboardPositionMode: KeyboardPositionMode
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
@@ -116,7 +117,13 @@ fun SafePasswordTextField(
         visualTransformation = VisualTransformation { transformedText },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         modifier = modifier
-            .bringIntoViewRequester(bringIntoViewRequester)
+            .then(
+                if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
+                    Modifier.bringIntoViewRequester(bringIntoViewRequester)
+                } else {
+                    Modifier
+                }
+            )
             .onFocusChanged { focusState ->
                 hasFocus = focusState.isFocused
                 if (!focusState.isFocused) {
@@ -125,9 +132,11 @@ fun SafePasswordTextField(
                 }
                 if (focusState.isFocused && !isKeyboardVisible) {
                     onOpenKeyboard()
-                    coroutineScope.launch {
-                        delay(300)
-                        bringIntoViewRequester.bringIntoView()
+                    if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
+                        coroutineScope.launch {
+                            delay(300)
+                            bringIntoViewRequester.bringIntoView()
+                        }
                     }
                 }
             },
