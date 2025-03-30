@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,16 +47,14 @@ fun SafeKeyboardLayout(
         onOpenKeyboard: () -> Unit,
         password: TextFieldValue,
         setPassword: (TextFieldValue) -> Unit,
-        bringIntoViewRequester: BringIntoViewRequester,
         listState: LazyListState
     ) -> Unit
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
-    val keyboardHeightPx = remember { mutableStateOf(0) }
+    val keyboardHeightPx = remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val keyboardHeightDp = with(density) { keyboardHeightPx.value.toDp() }
 
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val listState = rememberLazyListState()
 
     Box(
@@ -74,7 +73,6 @@ fun SafeKeyboardLayout(
                 { onKeyboardVisibilityChanged(true) },
                 inputText,
                 { inputText = it },
-                bringIntoViewRequester,
                 listState
             )
         }

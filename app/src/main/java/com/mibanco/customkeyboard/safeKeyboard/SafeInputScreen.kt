@@ -47,7 +47,7 @@ fun SafeInputScreen() {
         isKeyboardVisible = isKeyboardVisible,
         onKeyboardVisibilityChanged = { isKeyboardVisible = it },
         focusManager = focusManager
-    ) { onOpenKeyboard, password, setPassword, bringIntoViewRequester, listState ->
+    ) { onOpenKeyboard, password, setPassword, listState ->
 
         LazyColumn(
             modifier = Modifier
