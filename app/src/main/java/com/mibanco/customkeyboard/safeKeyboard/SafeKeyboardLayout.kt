@@ -3,6 +3,7 @@ package com.mibanco.customkeyboard.safeKeyboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +35,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SafeKeyboardLayout(
     keyboardType: KeyboardType,
@@ -41,34 +45,37 @@ fun SafeKeyboardLayout(
     content: @Composable (
         onOpenKeyboard: () -> Unit,
         password: TextFieldValue,
-        setPassword: (TextFieldValue) -> Unit
-    ) -> Unit,
+        setPassword: (TextFieldValue) -> Unit,
+        bringIntoViewRequester: BringIntoViewRequester,
+        listState: LazyListState
+    ) -> Unit
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
-
-    val scrollState = rememberScrollState()
     val keyboardHeightPx = remember { mutableStateOf(0) }
     val density = LocalDensity.current
     val keyboardHeightDp = with(density) { keyboardHeightPx.value.toDp() }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val listState = rememberLazyListState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures { focusManager.clearFocus(force = true) }
+            }
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .pointerInput(Unit) {
-                    detectTapGestures(onTap = {
-                        focusManager.clearFocus(force = true)
-                    })
-                }
-                .padding(bottom = if (isKeyboardVisible) keyboardHeightDp else 0.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
+                .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp)
         ) {
             content(
                 { onKeyboardVisibilityChanged(true) },
                 inputText,
-                { inputText = it }
+                { inputText = it },
+                bringIntoViewRequester,
+                listState
             )
         }
 
@@ -76,14 +83,14 @@ fun SafeKeyboardLayout(
             visible = isKeyboardVisible,
             enter = slideInVertically(initialOffsetY = { it }),
             exit = slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.align(Alignment.BottomCenter) // 👈 ancla al fondo
+            modifier = Modifier.align(Alignment.BottomCenter)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFE0E0E0))
-                    .onGloballyPositioned { layoutCoordinates ->
-                        keyboardHeightPx.value = layoutCoordinates.size.height
+                    .onGloballyPositioned {
+                        keyboardHeightPx.value = it.size.height
                     }
             ) {
                 SafeKeyboard(
@@ -108,7 +115,7 @@ fun SafeKeyboardLayout(
                                 selection = TextRange(index - 1)
                             )
                         }
-                    },
+                    }
                 )
             }
         }

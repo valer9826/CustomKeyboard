@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,64 +37,69 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SafeInputScreen() {
-    var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
     val focusManager = LocalFocusManager.current
-    val focusRequester = remember { FocusRequester() }
+    var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
     var isKeyboardVisible by remember { mutableStateOf(false) }
-
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val coroutineScope = rememberCoroutineScope()
 
     SafeKeyboardLayout(
         keyboardType = keyboardType,
         isKeyboardVisible = isKeyboardVisible,
         onKeyboardVisibilityChanged = { isKeyboardVisible = it },
-        focusManager = focusManager,
-    ) { onOpenKeyboard, password, setPassword ->
+        focusManager = focusManager
+    ) { onOpenKeyboard, password, setPassword, bringIntoViewRequester, listState ->
 
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            state = listState
         ) {
-            Text(text = "Ingresa tu valor:", fontSize = 20.sp)
+            item {
+                Text("Ingresa tu valor:", fontSize = 20.sp)
+                Spacer(Modifier.height(12.dp))
+            }
 
-            SafePasswordTextField(
-                value = password,
-                onValueChange = setPassword,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                isKeyboardVisible = isKeyboardVisible,
-                bringIntoViewRequester = bringIntoViewRequester,
-                coroutineScope = coroutineScope,
-                onOpenKeyboard = {
-                    onOpenKeyboard()
-                    isKeyboardVisible = true
-                    coroutineScope.launch {
-                        delay(300)
-                        bringIntoViewRequester.bringIntoView()
-                    }
-                },
-                onKeyboardDismiss = {
-                    isKeyboardVisible = false
+            items(10) { index ->
+                val inputRequester = remember { BringIntoViewRequester() }
+
+                SafePasswordTextField(
+                    value = password,
+                    onValueChange = setPassword,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .bringIntoViewRequester(inputRequester),
+                    isKeyboardVisible = isKeyboardVisible,
+                    bringIntoViewRequester = inputRequester,
+                    coroutineScope = coroutineScope,
+                    onOpenKeyboard = {
+                        onOpenKeyboard()
+                        isKeyboardVisible = true
+                        coroutineScope.launch {
+                            delay(300)
+                            inputRequester.bringIntoView()
+                        }
+                    },
+                    onKeyboardDismiss = { isKeyboardVisible = false }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            item {
+                Button(onClick = {
+                    keyboardType =
+                        if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+                    focusManager.clearFocus(force = true)
+                }) {
+                    Text("Cambiar Teclado")
                 }
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(onClick = {
-                keyboardType =
-                    if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
-                focusManager.clearFocus(force = true)
-            }) {
-                Text("Cambiar Teclado")
             }
         }
     }
 }
+
 
 @Composable
 fun EnableSecureFlag() {
