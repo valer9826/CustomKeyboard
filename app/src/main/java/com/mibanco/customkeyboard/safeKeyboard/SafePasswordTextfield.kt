@@ -1,5 +1,8 @@
 package com.mibanco.customkeyboard.safeKeyboard
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -24,15 +27,21 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SafePasswordTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
     onOpenKeyboard: () -> Unit,
-    isKeyboardVisible: Boolean
+    onKeyboardDismiss: () -> Unit,
+    isKeyboardVisible: Boolean,
+    bringIntoViewRequester: BringIntoViewRequester,
+    coroutineScope: CoroutineScope
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
@@ -64,9 +73,7 @@ fun SafePasswordTextField(
     } else -1
 
     if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
-        onValueChange(
-            value.copy(selection = TextRange(value.text.length))
-        )
+        onValueChange(value.copy(selection = TextRange(value.text.length)))
     }
 
     val transformedText = remember(value.text, cursorIndex, isPasswordVisible, isCursorVisible) {
@@ -108,15 +115,22 @@ fun SafePasswordTextField(
         readOnly = true,
         visualTransformation = VisualTransformation { transformedText },
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-        modifier = modifier.onFocusChanged { focusState ->
-            hasFocus = focusState.isFocused
-            if (!focusState.isFocused) {
-                cursorManuallyMoved = false
-            }
-            if (focusState.isFocused && !isKeyboardVisible) {
-                onOpenKeyboard()
-            }
-        },
+        modifier = modifier
+            .bringIntoViewRequester(bringIntoViewRequester)
+            .onFocusChanged { focusState ->
+                hasFocus = focusState.isFocused
+                if (!focusState.isFocused) {
+                    cursorManuallyMoved = false
+                    onKeyboardDismiss()
+                }
+                if (focusState.isFocused && !isKeyboardVisible) {
+                    onOpenKeyboard()
+                    coroutineScope.launch {
+                        delay(300)
+                        bringIntoViewRequester.bringIntoView()
+                    }
+                }
+            },
         trailingIcon = {
             IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                 Icon(
