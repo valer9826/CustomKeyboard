@@ -113,7 +113,7 @@ fun CustomAlphaKeyboard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 18.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -184,7 +184,7 @@ fun CustomNumericKeyboard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 18.dp),
         verticalArrangement = Arrangement.spacedBy(1.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

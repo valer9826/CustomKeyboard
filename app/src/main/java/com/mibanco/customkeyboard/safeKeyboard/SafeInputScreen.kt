@@ -4,10 +4,8 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +26,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,50 +46,57 @@ fun SafeInputScreen() {
     SafeKeyboardLayout(
         keyboardType = keyboardType,
         isKeyboardVisible = isKeyboardVisible,
-        onKeyboardVisibilityChanged = { isKeyboardVisible = it }
+        onKeyboardVisibilityChanged = { isKeyboardVisible = it },
+        focusManager = focusManager,
     ) { onOpenKeyboard, password, setPassword ->
 
-        Text(text = "Ingresa tu valor:", fontSize = 20.sp)
-
-        SafePasswordTextField(
-            value = password,
-            onValueChange = setPassword,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(focusRequester),
-            isKeyboardVisible = isKeyboardVisible,
-            bringIntoViewRequester = bringIntoViewRequester,
-            coroutineScope = coroutineScope,
-            onOpenKeyboard = {
-                onOpenKeyboard()
-                isKeyboardVisible = true
-                coroutineScope.launch {
-                    delay(300)
-                    bringIntoViewRequester.bringIntoView()
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "Ingresa tu valor:", fontSize = 20.sp)
+
+            SafePasswordTextField(
+                value = password,
+                onValueChange = setPassword,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                isKeyboardVisible = isKeyboardVisible,
+                bringIntoViewRequester = bringIntoViewRequester,
+                coroutineScope = coroutineScope,
+                onOpenKeyboard = {
+                    onOpenKeyboard()
+                    isKeyboardVisible = true
+                    coroutineScope.launch {
+                        delay(300)
+                        bringIntoViewRequester.bringIntoView()
+                    }
+                },
+                onKeyboardDismiss = {
+                    isKeyboardVisible = false
                 }
-            },
-            onKeyboardDismiss = {
-                isKeyboardVisible = false
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(onClick = {
+                keyboardType =
+                    if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+                focusManager.clearFocus(force = true)
+            }) {
+                Text("Cambiar Teclado")
             }
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(onClick = {
-            keyboardType =
-                if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
-            focusManager.clearFocus(force = true)
-        }) {
-            Text("Cambiar Teclado")
         }
     }
 }
 
-
 @Composable
 fun EnableSecureFlag() {
     val context = LocalContext.current
-    val view = LocalView.current
 
     SideEffect {
         val activity = context as? ComponentActivity
