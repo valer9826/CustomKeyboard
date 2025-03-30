@@ -18,6 +18,7 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -53,68 +54,71 @@ fun SafeKeyboardLayout(
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
     val keyboardHeightPx = remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
-    val keyboardHeightDp = with(density) { keyboardHeightPx.value.toDp() }
+    val keyboardHeightDp = with(density) { keyboardHeightPx.intValue.toDp() }
 
     val listState = rememberLazyListState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures { focusManager.clearFocus(force = true) }
-            }
-    ) {
-        Column(
+    Scaffold { innerPadding ->
+        Box(
             modifier = Modifier
+                .padding(innerPadding)
                 .fillMaxSize()
-                .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures { focusManager.clearFocus(force = true) }
+                }
         ) {
-            content(
-                { onKeyboardVisibilityChanged(true) },
-                inputText,
-                { inputText = it },
-                listState
-            )
-        }
-
-        AnimatedVisibility(
-            visible = isKeyboardVisible,
-            enter = slideInVertically(initialOffsetY = { it }),
-            exit = slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.align(Alignment.BottomCenter)
-        ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFE0E0E0))
-                    .onGloballyPositioned {
-                        keyboardHeightPx.value = it.size.height
-                    }
+                    .fillMaxSize()
+                    .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp)
             ) {
-                SafeKeyboard(
-                    type = keyboardType,
-                    onKeyPress = { key ->
-                        val index = inputText.selection.start
-                        val newText =
-                            inputText.text.substring(0, index) + key + inputText.text.substring(
-                                index
-                            )
-                        inputText = TextFieldValue(
-                            text = newText,
-                            selection = TextRange(index + key.length)
-                        )
-                    },
-                    onDelete = {
-                        val index = inputText.selection.start
-                        if (index > 0) {
-                            val newText = inputText.text.removeRange(index - 1, index)
+                content(
+                    { onKeyboardVisibilityChanged(true) },
+                    inputText,
+                    { inputText = it },
+                    listState
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isKeyboardVisible,
+                enter = slideInVertically(initialOffsetY = { it }),
+                exit = slideOutVertically(targetOffsetY = { it }),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE0E0E0))
+                        .onGloballyPositioned {
+                            keyboardHeightPx.intValue = it.size.height
+                        }
+                ) {
+                    SafeKeyboard(
+                        type = keyboardType,
+                        onKeyPress = { key ->
+                            val index = inputText.selection.start
+                            val newText =
+                                inputText.text.substring(0, index) + key + inputText.text.substring(
+                                    index
+                                )
                             inputText = TextFieldValue(
                                 text = newText,
-                                selection = TextRange(index - 1)
+                                selection = TextRange(index + key.length)
                             )
+                        },
+                        onDelete = {
+                            val index = inputText.selection.start
+                            if (index > 0) {
+                                val newText = inputText.text.removeRange(index - 1, index)
+                                inputText = TextFieldValue(
+                                    text = newText,
+                                    selection = TextRange(index - 1)
+                                )
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

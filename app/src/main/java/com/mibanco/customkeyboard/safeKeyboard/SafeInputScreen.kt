@@ -69,18 +69,13 @@ fun SafeInputScreen() {
                     value = password,
                     onValueChange = setPassword,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .bringIntoViewRequester(inputRequester),
+                        .fillMaxWidth(),
                     isKeyboardVisible = isKeyboardVisible,
                     bringIntoViewRequester = inputRequester,
                     coroutineScope = coroutineScope,
                     onOpenKeyboard = {
                         onOpenKeyboard()
                         isKeyboardVisible = true
-                        coroutineScope.launch {
-                            delay(300)
-                            inputRequester.bringIntoView()
-                        }
                     },
                     onKeyboardDismiss = { isKeyboardVisible = false }
                 )
