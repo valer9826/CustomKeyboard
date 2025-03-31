@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -29,87 +31,98 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.collections.set
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SafeInputScreen() {
     val focusManager = LocalFocusManager.current
-    var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
-    var isKeyboardVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
 
-    var lastItemRequester = remember { BringIntoViewRequester() }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
+    val passwords = remember {
+        mutableStateListOf<TextFieldValue>().apply {
+            repeat(TEST_NUMBER) { add(TextFieldValue()) }
+        }
+    }
 
-    //EnableSecureFlag()
+    val focusedFieldIndex = remember { mutableIntStateOf(-1) }
 
     SafeKeyboardLayout(
         keyboardType = keyboardType,
-        isKeyboardVisible = isKeyboardVisible,
-        onKeyboardVisibilityChanged = { isKeyboardVisible = it },
         focusManager = focusManager,
+        onKeyPress = { key ->
+            val index = focusedFieldIndex.intValue
+            if (index in passwords.indices) {
+                val old = passwords[index]
+                val cursor = old.selection.start
+                val newText = old.text.substring(0, cursor) + key + old.text.substring(cursor)
+                passwords[index] = TextFieldValue(
+                    text = newText,
+                    selection = TextRange(cursor + key.length)
+                )
+            }
+        },
+        onDelete = {
+            val index = focusedFieldIndex.intValue
+            if (index in passwords.indices) {
+                val old = passwords[index]
+                val cursor = old.selection.start
+                if (cursor > 0) {
+                    val newText = old.text.removeRange(cursor - 1, cursor)
+                    passwords[index] = TextFieldValue(
+                        text = newText,
+                        selection = TextRange(cursor - 1)
+                    )
+                }
+            }
+        },
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) { onOpenKeyboard, passwords, setPassword, focusedFieldIndex ->
+    ) { onOpenKeyboard, onKeyboardDismiss, keyboardPositionMode, lastItemRequester ->
 
-        Column(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text("Ingresa tu valor:", fontSize = 20.sp)
-            Spacer(Modifier.height(12.dp))
+        Text("Ingresa tu valor:", fontSize = 20.sp)
+        Spacer(Modifier.height(12.dp))
 
-            repeat(TEST_NUMBER) { index ->
-                val inputRequester = remember { BringIntoViewRequester() }
+        repeat(TEST_NUMBER) { index ->
+            val inputRequester = remember { BringIntoViewRequester() }
 
-                SafePasswordTextField(
-                    value = passwords[index],
-                    onValueChange = { setPassword(index, it) },
-                    fieldIndex = index,
-                    focusedFieldIndex = focusedFieldIndex,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    bringIntoViewRequester = inputRequester,
-                    keyboardPositionMode = keyboardPositionMode,
-                    coroutineScope = coroutineScope,
-                    onOpenKeyboard = {
-                        onOpenKeyboard()
-                        isKeyboardVisible = true
-                    },
-                    onKeyboardDismiss = { isKeyboardVisible = false }
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+            SafePasswordTextField(
+                value = passwords[index],
+                onValueChange = { passwords[index] = it },
+                fieldIndex = index,
+                focusedFieldIndex = focusedFieldIndex,
+                modifier = Modifier.fillMaxWidth(),
+                bringIntoViewRequester = inputRequester,
+                keyboardPositionMode = keyboardPositionMode,
+                coroutineScope = coroutineScope,
+                onOpenKeyboard = onOpenKeyboard,
+                onKeyboardDismiss = onKeyboardDismiss
+            )
 
-            Button(
-                modifier = Modifier
-                    .bringIntoViewRequester(lastItemRequester),
-                onClick = {
-                    keyboardType =
-                        if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
-                    focusManager.clearFocus(force = true)
-                }
-            ) {
-                Text("Cambiar Teclado")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
-    }
 
-    LaunchedEffect(isKeyboardVisible, ) {
-        if (
-            isKeyboardVisible &&
-            keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT
+        Button(
+            modifier = Modifier.bringIntoViewRequester(lastItemRequester),
+            onClick = {
+                focusManager.clearFocus(force = true)
+                keyboardType =
+                    if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+            }
         ) {
-            lastItemRequester.bringIntoView()
+            Text("Cambiar Teclado")
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
+
 
 @Composable
 fun EnableSecureFlag() {

@@ -14,15 +14,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
@@ -34,33 +39,31 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun SafeKeyboardLayout(
     keyboardType: KeyboardType,
-    isKeyboardVisible: Boolean,
-    onKeyboardVisibilityChanged: (Boolean) -> Unit,
     focusManager: FocusManager,
+    keyboardPositionMode: KeyboardPositionMode = KeyboardPositionMode.FOLLOW_FOCUSED_FIELD,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    onKeyPress: (String) -> Unit,
+    onDelete: () -> Unit,
     content: @Composable (
         onOpenKeyboard: () -> Unit,
-        passwords: List<TextFieldValue>,
-        setPassword: (Int, TextFieldValue) -> Unit,
-        focusedFieldIndex: MutableIntState
+        onKeyboardDismiss: () -> Unit,
+        keyboardPositionMode: KeyboardPositionMode,
+        lastItemRequester: BringIntoViewRequester
     ) -> Unit
 ) {
-    val passwords = remember {
-        mutableStateListOf<TextFieldValue>().apply {
-            repeat(TEST_NUMBER) { add(TextFieldValue()) }
-        }
-    }
     val scrollState = rememberScrollState()
-    val focusedFieldIndex = remember { mutableIntStateOf(-1) }
+    var isKeyboardVisible by remember { mutableStateOf(false) }
     val keyboardHeightPx = remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val keyboardHeightDp = with(density) { keyboardHeightPx.intValue.toDp() }
+    val lastItemRequester = remember { BringIntoViewRequester() }
 
     Scaffold { innerPadding ->
         Box(
@@ -80,10 +83,10 @@ fun SafeKeyboardLayout(
                 horizontalAlignment = horizontalAlignment
             ) {
                 content(
-                    { onKeyboardVisibilityChanged(true) },
-                    passwords,
-                    { index, value -> passwords[index] = value },
-                    focusedFieldIndex
+                    { isKeyboardVisible = true },
+                    { isKeyboardVisible = false },
+                    keyboardPositionMode,
+                    lastItemRequester
                 )
             }
 
@@ -103,36 +106,21 @@ fun SafeKeyboardLayout(
                 ) {
                     SafeKeyboard(
                         type = keyboardType,
-                        onKeyPress = { key ->
-                            val index = focusedFieldIndex.intValue
-                            if (index in passwords.indices) {
-                                val old = passwords[index]
-                                val cursor = old.selection.start
-                                val newText =
-                                    old.text.substring(0, cursor) + key + old.text.substring(cursor)
-                                passwords[index] = TextFieldValue(
-                                    text = newText,
-                                    selection = TextRange(cursor + key.length)
-                                )
-                            }
-                        },
-                        onDelete = {
-                            val index = focusedFieldIndex.intValue
-                            if (index in passwords.indices) {
-                                val old = passwords[index]
-                                val cursor = old.selection.start
-                                if (cursor > 0) {
-                                    val newText = old.text.removeRange(cursor - 1, cursor)
-                                    passwords[index] = TextFieldValue(
-                                        text = newText,
-                                        selection = TextRange(cursor - 1)
-                                    )
-                                }
-                            }
-                        }
+                        onKeyPress = onKeyPress,
+                        onDelete = onDelete
                     )
                 }
             }
         }
     }
+
+    LaunchedEffect(isKeyboardVisible, keyboardPositionMode) {
+        if (
+            isKeyboardVisible &&
+            keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT
+        ) {
+            lastItemRequester.bringIntoView()
+        }
+    }
 }
+
