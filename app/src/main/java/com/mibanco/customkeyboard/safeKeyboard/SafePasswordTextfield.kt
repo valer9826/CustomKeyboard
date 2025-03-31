@@ -21,13 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -41,13 +37,19 @@ fun SafePasswordTextField(
     bringIntoViewRequester: BringIntoViewRequester,
     keyboardPositionMode: KeyboardPositionMode,
     fieldIndex: Int,
-    focusedFieldIndex: MutableIntState
+    focusedFieldIndex: MutableIntState,
+    allowCursorPlacement: Boolean = false
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isCursorVisible by remember { mutableStateOf(true) }
     var lastInputTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    val cursorIndex = rememberCursorIndex(
+        value = value,
+        hasFocus = hasFocus
+    )
 
     LaunchedEffect(value.text) {
         lastInputTime = System.currentTimeMillis()
@@ -75,52 +77,24 @@ fun SafePasswordTextField(
         }
     }
 
-    val cursorIndex = if (hasFocus) {
-        value.selection.start.coerceIn(0, value.text.length)
-    } else -1
-
-    if (hasFocus && !cursorManuallyMoved && value.selection.start != value.text.length) {
-        onValueChange(value.copy(selection = TextRange(value.text.length)))
-    }
-
-    val transformedText = remember(value.text, cursorIndex, isPasswordVisible, isCursorVisible) {
-        val builder = buildString {
-            value.text.forEachIndexed { index, char ->
-                if (index == cursorIndex && isCursorVisible) append('|')
-                append(if (isPasswordVisible) char else '•')
-            }
-            if (cursorIndex == value.text.length && isCursorVisible) append('|')
-        }
-
-        val offsetMapping = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int {
-                return offset + if (cursorIndex in 0..<offset && isCursorVisible) 1 else 0
-            }
-
-            override fun transformedToOriginal(offset: Int): Int {
-                return when {
-                    cursorIndex < 0 -> offset.coerceAtMost(value.text.length)
-                    offset <= cursorIndex -> offset
-                    offset == cursorIndex + 1 && isCursorVisible -> cursorIndex
-                    else -> value.text.length
-                }
-            }
-        }
-
-        TransformedText(AnnotatedString(builder), offsetMapping)
-    }
-
     TextField(
         value = value,
         onValueChange = {
-            if (it.selection.start != value.selection.start) {
-                cursorManuallyMoved = true
+            val adjusted = if (!allowCursorPlacement) {
+                it.copy(selection = TextRange(it.text.length))
+            } else {
+                it
             }
-            onValueChange(it)
+            onValueChange(adjusted)
         },
         label = { Text("Ingrese valor") },
         readOnly = true,
-        visualTransformation = VisualTransformation { transformedText },
+        visualTransformation = MaskVisualTransformation(
+            isPasswordVisible = isPasswordVisible,
+            isCursorVisible = isCursorVisible,
+            cursorIndex = cursorIndex,
+            originalText = value.text
+        ),
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         modifier = modifier
             .then(
@@ -152,4 +126,14 @@ fun SafePasswordTextField(
             }
         }
     )
+}
+
+@Composable
+fun rememberCursorIndex(
+    value: TextFieldValue,
+    hasFocus: Boolean
+): Int {
+    return if (hasFocus) {
+        value.selection.start.coerceIn(0, value.text.length)
+    } else -1
 }
