@@ -122,7 +122,6 @@ fun SafeKeyboardLayout(
                             }
                         }
                     )
-
                 }
             }
         }

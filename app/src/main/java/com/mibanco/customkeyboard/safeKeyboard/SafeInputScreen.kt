@@ -42,8 +42,7 @@ fun SafeInputScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var lastItemRequester = remember { BringIntoViewRequester() }
-    val buttonComposed = remember { mutableStateOf(false) }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
+    var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
     val scrollState = rememberScrollState()
 
     //EnableSecureFlag()
@@ -90,10 +89,7 @@ fun SafeInputScreen() {
 
             Button(
                 modifier = Modifier
-                    .bringIntoViewRequester(lastItemRequester)
-                    .onGloballyPositioned {
-                        buttonComposed.value = true
-                    },
+                    .bringIntoViewRequester(lastItemRequester),
                 onClick = {
                     keyboardType =
                         if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
@@ -107,11 +103,10 @@ fun SafeInputScreen() {
         }
     }
 
-    LaunchedEffect(isKeyboardVisible, buttonComposed.value) {
+    LaunchedEffect(isKeyboardVisible, ) {
         if (
             isKeyboardVisible &&
-            keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT &&
-            buttonComposed.value
+            keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT
         ) {
             lastItemRequester.bringIntoView()
         }
