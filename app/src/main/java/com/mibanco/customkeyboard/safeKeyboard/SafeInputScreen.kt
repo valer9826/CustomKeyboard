@@ -42,7 +42,7 @@ fun SafeInputScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     var lastItemRequester = remember { BringIntoViewRequester() }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
+    var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
     val scrollState = rememberScrollState()
 
     //EnableSecureFlag()
