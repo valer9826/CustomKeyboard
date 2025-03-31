@@ -40,7 +40,6 @@ fun SafePasswordTextField(
     modifier: Modifier = Modifier,
     onOpenKeyboard: () -> Unit,
     onKeyboardDismiss: () -> Unit,
-    isKeyboardVisible: Boolean,
     bringIntoViewRequester: BringIntoViewRequester,
     coroutineScope: CoroutineScope,
     keyboardPositionMode: KeyboardPositionMode,

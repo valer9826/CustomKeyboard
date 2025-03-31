@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -44,24 +43,23 @@ fun SafeInputScreen() {
 
     var lastItemRequester = remember { BringIntoViewRequester() }
     val buttonComposed = remember { mutableStateOf(false) }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
-    val focusedFieldIndex = remember { mutableIntStateOf(-1) }
+    var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
     val scrollState = rememberScrollState()
 
-//    EnableSecureFlag()
+    EnableSecureFlag()
 
     SafeKeyboardLayout(
         keyboardType = keyboardType,
         isKeyboardVisible = isKeyboardVisible,
         onKeyboardVisibilityChanged = { isKeyboardVisible = it },
         focusManager = focusManager
-    ) { onOpenKeyboard, password, setPassword, listState ->
+    ) { onOpenKeyboard, passwords, setPassword, listState, focusedFieldIndex ->
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -72,13 +70,12 @@ fun SafeInputScreen() {
                 val inputRequester = remember { BringIntoViewRequester() }
 
                 SafePasswordTextField(
-                    value = password,
+                    value = passwords[index],
+                    onValueChange = { setPassword(index, it) },
                     fieldIndex = index,
                     focusedFieldIndex = focusedFieldIndex,
-                    onValueChange = setPassword,
                     modifier = Modifier
                         .fillMaxWidth(),
-                    isKeyboardVisible = isKeyboardVisible,
                     bringIntoViewRequester = inputRequester,
                     keyboardPositionMode = keyboardPositionMode,
                     coroutineScope = coroutineScope,
