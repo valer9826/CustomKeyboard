@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,7 +43,9 @@ fun SafePasswordTextField(
     isKeyboardVisible: Boolean,
     bringIntoViewRequester: BringIntoViewRequester,
     coroutineScope: CoroutineScope,
-    keyboardPositionMode: KeyboardPositionMode
+    keyboardPositionMode: KeyboardPositionMode,
+    fieldIndex: Int,
+    focusedFieldIndex: MutableIntState
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
@@ -126,17 +129,21 @@ fun SafePasswordTextField(
             )
             .onFocusChanged { focusState ->
                 hasFocus = focusState.isFocused
-                if (!focusState.isFocused) {
-                    cursorManuallyMoved = false
-                    onKeyboardDismiss()
-                }
-                if (focusState.isFocused && !isKeyboardVisible) {
+
+                if (focusState.isFocused) {
+                    focusedFieldIndex.intValue = fieldIndex
                     onOpenKeyboard()
                     if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
                         coroutineScope.launch {
                             delay(300)
                             bringIntoViewRequester.bringIntoView()
                         }
+                    }
+                } else {
+                    // Solo cerrar el teclado si ningún otro campo tiene el foco
+                    if (focusedFieldIndex.intValue == fieldIndex) {
+                        focusedFieldIndex.intValue = -1
+                        onKeyboardDismiss()
                     }
                 }
             },

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -21,7 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -34,8 +33,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -48,7 +45,7 @@ fun SafeInputScreen() {
     var lastItemRequester = remember { BringIntoViewRequester() }
     val buttonComposed = remember { mutableStateOf(false) }
     var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
-
+    val focusedFieldIndex = remember { mutableIntStateOf(-1) }
     val scrollState = rememberScrollState()
 
 //    EnableSecureFlag()
@@ -76,6 +73,8 @@ fun SafeInputScreen() {
 
                 SafePasswordTextField(
                     value = password,
+                    fieldIndex = index,
+                    focusedFieldIndex = focusedFieldIndex,
                     onValueChange = setPassword,
                     modifier = Modifier
                         .fillMaxWidth(),
