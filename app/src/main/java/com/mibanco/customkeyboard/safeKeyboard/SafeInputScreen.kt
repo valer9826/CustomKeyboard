@@ -46,14 +46,14 @@ fun SafeInputScreen() {
     var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
     val scrollState = rememberScrollState()
 
-    EnableSecureFlag()
+    //EnableSecureFlag()
 
     SafeKeyboardLayout(
         keyboardType = keyboardType,
         isKeyboardVisible = isKeyboardVisible,
         onKeyboardVisibilityChanged = { isKeyboardVisible = it },
         focusManager = focusManager
-    ) { onOpenKeyboard, passwords, setPassword, listState, focusedFieldIndex ->
+    ) { onOpenKeyboard, passwords, setPassword, focusedFieldIndex ->
 
         Column(
             modifier = Modifier
@@ -66,7 +66,7 @@ fun SafeInputScreen() {
             Text("Ingresa tu valor:", fontSize = 20.sp)
             Spacer(Modifier.height(12.dp))
 
-            repeat(10) { index ->
+            repeat(TEST_NUMBER) { index ->
                 val inputRequester = remember { BringIntoViewRequester() }
 
                 SafePasswordTextField(

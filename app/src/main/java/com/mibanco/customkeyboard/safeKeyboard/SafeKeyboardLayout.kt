@@ -43,21 +43,18 @@ fun SafeKeyboardLayout(
         onOpenKeyboard: () -> Unit,
         passwords: List<TextFieldValue>,
         setPassword: (Int, TextFieldValue) -> Unit,
-        listState: LazyListState,
         focusedFieldIndex: MutableIntState
     ) -> Unit
 ) {
     val passwords = remember {
         mutableStateListOf<TextFieldValue>().apply {
-            repeat(10) { add(TextFieldValue()) }
+            repeat(TEST_NUMBER) { add(TextFieldValue()) }
         }
     }
     val focusedFieldIndex = remember { mutableIntStateOf(-1) }
     val keyboardHeightPx = remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
     val keyboardHeightDp = with(density) { keyboardHeightPx.intValue.toDp() }
-
-    val listState = rememberLazyListState()
 
     Scaffold { innerPadding ->
         Box(
@@ -77,7 +74,6 @@ fun SafeKeyboardLayout(
                     { onKeyboardVisibilityChanged(true) },
                     passwords,
                     { index, value -> passwords[index] = value },
-                    listState,
                     focusedFieldIndex
                 )
             }
