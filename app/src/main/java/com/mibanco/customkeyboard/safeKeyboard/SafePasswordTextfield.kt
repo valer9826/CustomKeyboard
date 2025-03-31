@@ -37,12 +37,12 @@ fun SafePasswordTextField(
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier,
-    onOpenKeyboard: () -> Unit,
-    onKeyboardDismiss: () -> Unit,
     isKeyboardVisible: Boolean,
     bringIntoViewRequester: BringIntoViewRequester,
     coroutineScope: CoroutineScope,
-    keyboardPositionMode: KeyboardPositionMode
+    keyboardPositionMode: KeyboardPositionMode,
+    onFocus: () -> Unit,
+    onKeyboardDismiss: () -> Unit
 ) {
     var hasFocus by remember { mutableStateOf(false) }
     var cursorManuallyMoved by remember { mutableStateOf(false) }
@@ -62,9 +62,7 @@ fun SafePasswordTextField(
                 val now = System.currentTimeMillis()
                 isCursorVisible = if (now - lastInputTime > 500) {
                     !isCursorVisible
-                } else {
-                    true
-                }
+                } else true
             }
         }
     }
@@ -107,9 +105,7 @@ fun SafePasswordTextField(
     TextField(
         value = value,
         onValueChange = {
-            if (it.selection.start != value.selection.start) {
-                cursorManuallyMoved = true
-            }
+            if (it.selection.start != value.selection.start) cursorManuallyMoved = true
             onValueChange(it)
         },
         label = { Text("Ingrese valor") },
@@ -118,20 +114,17 @@ fun SafePasswordTextField(
         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
         modifier = modifier
             .then(
-                if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
+                if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD)
                     Modifier.bringIntoViewRequester(bringIntoViewRequester)
-                } else {
-                    Modifier
-                }
+                else Modifier
             )
             .onFocusChanged { focusState ->
                 hasFocus = focusState.isFocused
                 if (!focusState.isFocused) {
                     cursorManuallyMoved = false
                     onKeyboardDismiss()
-                }
-                if (focusState.isFocused && !isKeyboardVisible) {
-                    onOpenKeyboard()
+                } else {
+                    onFocus()
                     if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
                         coroutineScope.launch {
                             delay(300)
@@ -150,3 +143,4 @@ fun SafePasswordTextField(
         }
     )
 }
+

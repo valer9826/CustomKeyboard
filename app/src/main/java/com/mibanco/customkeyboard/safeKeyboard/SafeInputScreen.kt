@@ -17,18 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -38,23 +35,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun SafeInputScreen() {
     val focusManager = LocalFocusManager.current
-    var keyboardType by remember { mutableStateOf(KeyboardType.Number) }
-    var isKeyboardVisible by remember { mutableStateOf(false) }
+    val controller = remember(focusManager) { SafeKeyboardController(focusManager) }
     val coroutineScope = rememberCoroutineScope()
-
-    var lastItemRequester = remember { BringIntoViewRequester() }
+    val lastItemRequester = remember { BringIntoViewRequester() }
     val buttonComposed = remember { mutableStateOf(false) }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
+    val keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
 
-//    EnableSecureFlag()
-
-    SafeKeyboardLayout(
-        keyboardType = keyboardType,
-        isKeyboardVisible = isKeyboardVisible,
-        onKeyboardVisibilityChanged = { isKeyboardVisible = it },
-        focusManager = focusManager
-    ) { onOpenKeyboard, password, setPassword, listState ->
-
+    SafeKeyboardLayout(controller = controller) { password, setPassword, listState ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,47 +61,40 @@ fun SafeInputScreen() {
                 SafePasswordTextField(
                     value = password,
                     onValueChange = setPassword,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    isKeyboardVisible = isKeyboardVisible,
+                    modifier = Modifier.fillMaxWidth(),
                     bringIntoViewRequester = inputRequester,
-                    keyboardPositionMode = keyboardPositionMode,
                     coroutineScope = coroutineScope,
-                    onOpenKeyboard = {
-                        onOpenKeyboard()
-                        isKeyboardVisible = true
+                    keyboardPositionMode = keyboardPositionMode,
+                    isKeyboardVisible = controller.isKeyboardVisible,
+                    onFocus = {
+                        controller.openKeyboard(inputRequester)
                     },
-                    onKeyboardDismiss = { isKeyboardVisible = false }
+                    onKeyboardDismiss = {
+                        controller.hideKeyboard()
+                    }
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
             item {
                 key("lastItem") {
-
                     Button(
                         modifier = Modifier
                             .bringIntoViewRequester(lastItemRequester)
                             .onGloballyPositioned {
                                 buttonComposed.value = true
                             },
-                        onClick = {
-                            keyboardType =
-                                if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
-                            focusManager.clearFocus(force = true)
-                        }
+                        onClick = controller::toggleKeyboardType
                     ) {
                         Text("Cambiar Teclado")
                     }
-
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
 
-        LaunchedEffect(isKeyboardVisible, buttonComposed.value) {
-            if (
-                isKeyboardVisible &&
+        LaunchedEffect(controller.isKeyboardVisible, buttonComposed.value) {
+            if (controller.isKeyboardVisible &&
                 keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT &&
                 buttonComposed.value
             ) {

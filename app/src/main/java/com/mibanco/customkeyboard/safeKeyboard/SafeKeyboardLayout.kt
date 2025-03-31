@@ -17,41 +17,30 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@ExperimentalFoundationApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SafeKeyboardLayout(
-    keyboardType: KeyboardType,
-    isKeyboardVisible: Boolean,
-    onKeyboardVisibilityChanged: (Boolean) -> Unit,
-    focusManager: FocusManager,
+    controller: SafeKeyboardController,
     content: @Composable (
-        onOpenKeyboard: () -> Unit,
         password: TextFieldValue,
         setPassword: (TextFieldValue) -> Unit,
         listState: LazyListState
     ) -> Unit
 ) {
     var inputText by remember { mutableStateOf(TextFieldValue("")) }
-    val keyboardHeightPx = remember { mutableIntStateOf(0) }
-    val density = LocalDensity.current
-    val keyboardHeightDp = with(density) { keyboardHeightPx.intValue.toDp() }
-
     val listState = rememberLazyListState()
 
     Scaffold { innerPadding ->
@@ -60,26 +49,23 @@ fun SafeKeyboardLayout(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    detectTapGestures { focusManager.clearFocus(force = true) }
+                    detectTapGestures {
+                        controller.hideKeyboard()
+                    }
                 }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp)
+                    .padding(bottom = if (controller.isKeyboardVisible) controller.keyboardHeightDp + 8.dp else 0.dp)
             ) {
-                content(
-                    { onKeyboardVisibilityChanged(true) },
-                    inputText,
-                    { inputText = it },
-                    listState
-                )
+                content(inputText, { inputText = it }, listState)
             }
 
             AnimatedVisibility(
-                visible = isKeyboardVisible,
-                enter = slideInVertically(initialOffsetY = { it }),
-                exit = slideOutVertically(targetOffsetY = { it }),
+                visible = controller.isKeyboardVisible,
+                enter = slideInVertically { it },
+                exit = slideOutVertically { it },
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 Box(
@@ -87,17 +73,14 @@ fun SafeKeyboardLayout(
                         .fillMaxWidth()
                         .background(Color(0xFFE0E0E0))
                         .onGloballyPositioned {
-                            keyboardHeightPx.intValue = it.size.height
+                            controller.keyboardHeightPx = it.size.height
                         }
                 ) {
                     SafeKeyboard(
-                        type = keyboardType,
+                        type = controller.keyboardType,
                         onKeyPress = { key ->
                             val index = inputText.selection.start
-                            val newText =
-                                inputText.text.substring(0, index) + key + inputText.text.substring(
-                                    index
-                                )
+                            val newText = inputText.text.substring(0, index) + key + inputText.text.substring(index)
                             inputText = TextFieldValue(
                                 text = newText,
                                 selection = TextRange(index + key.length)
