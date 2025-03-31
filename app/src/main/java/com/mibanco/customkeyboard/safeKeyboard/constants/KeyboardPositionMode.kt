@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.safeKeyboard
+package com.mibanco.customkeyboard.safeKeyboard.constants
 
 enum class KeyboardPositionMode {
     FOLLOW_FOCUSED_FIELD,

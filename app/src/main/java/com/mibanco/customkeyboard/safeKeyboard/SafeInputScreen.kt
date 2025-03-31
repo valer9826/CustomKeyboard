@@ -27,6 +27,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mibanco.customkeyboard.safeKeyboard.components.SafeKeyboardLayout
+import com.mibanco.customkeyboard.safeKeyboard.components.SafePasswordTextField
+import com.mibanco.customkeyboard.safeKeyboard.helpers.SafeCursorState
 
 const val TEST_NUMBER = 12
 

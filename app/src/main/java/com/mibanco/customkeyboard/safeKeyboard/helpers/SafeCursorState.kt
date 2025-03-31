@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.safeKeyboard
+package com.mibanco.customkeyboard.safeKeyboard.helpers
 
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.snapshots.SnapshotStateList

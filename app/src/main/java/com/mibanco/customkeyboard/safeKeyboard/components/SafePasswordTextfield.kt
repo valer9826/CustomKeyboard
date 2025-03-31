@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.safeKeyboard
+package com.mibanco.customkeyboard.safeKeyboard.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -24,6 +24,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import com.mibanco.customkeyboard.safeKeyboard.constants.KeyboardPositionMode
+import com.mibanco.customkeyboard.safeKeyboard.helpers.MaskVisualTransformation
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalFoundationApi::class)

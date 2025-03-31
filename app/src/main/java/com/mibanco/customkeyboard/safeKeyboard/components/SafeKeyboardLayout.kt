@@ -1,4 +1,4 @@
-package com.mibanco.customkeyboard.safeKeyboard
+package com.mibanco.customkeyboard.safeKeyboard.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.mibanco.customkeyboard.safeKeyboard.constants.KeyboardPositionMode
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
