@@ -6,6 +6,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -39,6 +42,8 @@ fun SafeKeyboardLayout(
     isKeyboardVisible: Boolean,
     onKeyboardVisibilityChanged: (Boolean) -> Unit,
     focusManager: FocusManager,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     content: @Composable (
         onOpenKeyboard: () -> Unit,
         passwords: List<TextFieldValue>,
@@ -51,6 +56,7 @@ fun SafeKeyboardLayout(
             repeat(TEST_NUMBER) { add(TextFieldValue()) }
         }
     }
+    val scrollState = rememberScrollState()
     val focusedFieldIndex = remember { mutableIntStateOf(-1) }
     val keyboardHeightPx = remember { mutableIntStateOf(0) }
     val density = LocalDensity.current
@@ -68,7 +74,10 @@ fun SafeKeyboardLayout(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp)
+                    .verticalScroll(scrollState)
+                    .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp),
+                verticalArrangement = verticalArrangement,
+                horizontalAlignment = horizontalAlignment
             ) {
                 content(
                     { onKeyboardVisibilityChanged(true) },

@@ -43,7 +43,6 @@ fun SafeInputScreen() {
 
     var lastItemRequester = remember { BringIntoViewRequester() }
     var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
-    val scrollState = rememberScrollState()
 
     //EnableSecureFlag()
 
@@ -51,15 +50,14 @@ fun SafeInputScreen() {
         keyboardType = keyboardType,
         isKeyboardVisible = isKeyboardVisible,
         onKeyboardVisibilityChanged = { isKeyboardVisible = it },
-        focusManager = focusManager
+        focusManager = focusManager,
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) { onOpenKeyboard, passwords, setPassword, focusedFieldIndex ->
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Ingresa tu valor:", fontSize = 20.sp)
