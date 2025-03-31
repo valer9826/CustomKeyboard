@@ -4,6 +4,7 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +47,9 @@ fun SafeInputScreen() {
 
     var lastItemRequester = remember { BringIntoViewRequester() }
     val buttonComposed = remember { mutableStateOf(false) }
-    var keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
+    var keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
+
+    val scrollState = rememberScrollState()
 
 //    EnableSecureFlag()
 
@@ -55,20 +60,18 @@ fun SafeInputScreen() {
         focusManager = focusManager
     ) { onOpenKeyboard, password, setPassword, listState ->
 
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
-            state = listState
         ) {
-            item {
-                Text("Ingresa tu valor:", fontSize = 20.sp)
-                Spacer(Modifier.height(12.dp))
-            }
+            Text("Ingresa tu valor:", fontSize = 20.sp)
+            Spacer(Modifier.height(12.dp))
 
-            items(10) { index ->
+            repeat(10) { index ->
                 val inputRequester = remember { BringIntoViewRequester() }
 
                 SafePasswordTextField(
@@ -89,40 +92,32 @@ fun SafeInputScreen() {
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            item {
-                key("lastItem") {
-
-                    Button(
-                        modifier = Modifier
-                            .bringIntoViewRequester(lastItemRequester)
-                            .onGloballyPositioned {
-                                buttonComposed.value = true
-                            },
-                        onClick = {
-                            keyboardType =
-                                if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
-                            focusManager.clearFocus(force = true)
-                        }
-                    ) {
-                        Text("Cambiar Teclado")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                modifier = Modifier
+                    .bringIntoViewRequester(lastItemRequester)
+                    .onGloballyPositioned {
+                        buttonComposed.value = true
+                    },
+                onClick = {
+                    keyboardType =
+                        if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+                    focusManager.clearFocus(force = true)
                 }
-            }
-        }
-
-        LaunchedEffect(isKeyboardVisible, buttonComposed.value) {
-            if (
-                isKeyboardVisible &&
-                keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT &&
-                buttonComposed.value
             ) {
-                delay(50)
-                coroutineScope.launch {
-                    listState.scrollToItem(listState.layoutInfo.totalItemsCount - 1)
-                }
+                Text("Cambiar Teclado")
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+
+    LaunchedEffect(isKeyboardVisible, buttonComposed.value) {
+        if (
+            isKeyboardVisible &&
+            keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT &&
+            buttonComposed.value
+        ) {
+            lastItemRequester.bringIntoView()
         }
     }
 }
