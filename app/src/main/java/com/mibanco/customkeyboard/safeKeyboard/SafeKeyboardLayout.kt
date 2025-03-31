@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -21,10 +19,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,11 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.CoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -55,7 +48,7 @@ fun SafeKeyboardLayout(
         onOpenKeyboard: () -> Unit,
         onKeyboardDismiss: () -> Unit,
         keyboardPositionMode: KeyboardPositionMode,
-        lastItemRequester: BringIntoViewRequester
+        lastItemRequester: BringIntoViewRequester,
     ) -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -77,19 +70,21 @@ fun SafeKeyboardLayout(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
                     .padding(bottom = if (isKeyboardVisible) keyboardHeightDp + 8.dp else 0.dp),
                 verticalArrangement = verticalArrangement,
-                horizontalAlignment = horizontalAlignment
             ) {
-                content(
-                    { isKeyboardVisible = true },
-                    { isKeyboardVisible = false },
-                    keyboardPositionMode,
-                    lastItemRequester
-                )
+                Column(
+                    modifier = Modifier.verticalScroll(scrollState),
+                    horizontalAlignment = horizontalAlignment
+                ) {
+                    content(
+                        { isKeyboardVisible = true },
+                        { isKeyboardVisible = false },
+                        keyboardPositionMode,
+                        lastItemRequester,
+                    )
+                }
             }
-
             AnimatedVisibility(
                 visible = isKeyboardVisible,
                 enter = slideInVertically(initialOffsetY = { it }),

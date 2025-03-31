@@ -28,9 +28,7 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,7 +39,6 @@ fun SafePasswordTextField(
     onOpenKeyboard: () -> Unit,
     onKeyboardDismiss: () -> Unit,
     bringIntoViewRequester: BringIntoViewRequester,
-    coroutineScope: CoroutineScope,
     keyboardPositionMode: KeyboardPositionMode,
     fieldIndex: Int,
     focusedFieldIndex: MutableIntState
@@ -68,6 +65,13 @@ fun SafePasswordTextField(
                     true
                 }
             }
+        }
+    }
+
+    LaunchedEffect(hasFocus, keyboardPositionMode) {
+        if (hasFocus && keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
+            delay(300)
+            bringIntoViewRequester.bringIntoView()
         }
     }
 
@@ -132,14 +136,7 @@ fun SafePasswordTextField(
                 if (focusState.isFocused) {
                     focusedFieldIndex.intValue = fieldIndex
                     onOpenKeyboard()
-                    if (keyboardPositionMode == KeyboardPositionMode.FOLLOW_FOCUSED_FIELD) {
-                        coroutineScope.launch {
-                            delay(300)
-                            bringIntoViewRequester.bringIntoView()
-                        }
-                    }
                 } else {
-                    // Solo cerrar el teclado si ningún otro campo tiene el foco
                     if (focusedFieldIndex.intValue == fieldIndex) {
                         focusedFieldIndex.intValue = -1
                         onKeyboardDismiss()

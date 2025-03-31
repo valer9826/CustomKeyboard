@@ -5,7 +5,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 
-class SafeTextFieldListController(
+class SafeCursorState(
     private val fields: SnapshotStateList<TextFieldValue>,
     private val focusedFieldIndex: MutableIntState
 ) {
