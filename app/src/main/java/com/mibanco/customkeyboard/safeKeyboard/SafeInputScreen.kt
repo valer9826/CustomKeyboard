@@ -4,20 +4,21 @@ import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,8 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -39,23 +38,21 @@ fun SafeInputScreen() {
     val coroutineScope = rememberCoroutineScope()
     val lastItemRequester = remember { BringIntoViewRequester() }
     val buttonComposed = remember { mutableStateOf(false) }
-    val keyboardPositionMode = remember { KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT }
+    val keyboardPositionMode = remember { KeyboardPositionMode.FOLLOW_FOCUSED_FIELD }
+    val scrollState = rememberScrollState()
 
     SafeKeyboardLayout(controller = controller) { password, setPassword, listState ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally,
-            state = listState
         ) {
-            item {
-                Text("Ingresa tu valor:", fontSize = 20.sp)
-                Spacer(Modifier.height(12.dp))
-            }
-
-            items(10) { index ->
+            Text("Ingresa tu valor:", fontSize = 20.sp)
+            Spacer(Modifier.height(12.dp))
+            repeat(10) { index ->
                 val inputRequester = remember { BringIntoViewRequester() }
 
                 SafePasswordTextField(
@@ -76,34 +73,29 @@ fun SafeInputScreen() {
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            item {
-                key("lastItem") {
-                    Button(
-                        modifier = Modifier
-                            .bringIntoViewRequester(lastItemRequester)
-                            .onGloballyPositioned {
-                                buttonComposed.value = true
-                            },
-                        onClick = controller::toggleKeyboardType
-                    ) {
-                        Text("Cambiar Teclado")
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
+            Button(
+                modifier = Modifier
+                    .bringIntoViewRequester(lastItemRequester)
+                    .onGloballyPositioned {
+                        buttonComposed.value = true
+                    },
+                onClick = controller::toggleKeyboardType
+            ) {
+                Text("Cambiar Teclado")
             }
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         LaunchedEffect(controller.isKeyboardVisible, buttonComposed.value) {
-            if (controller.isKeyboardVisible &&
+            if (
+                controller.isKeyboardVisible &&
                 keyboardPositionMode == KeyboardPositionMode.FIXED_TO_BOTTOM_OF_CONTENT &&
                 buttonComposed.value
             ) {
-                delay(50)
-                coroutineScope.launch {
-                    listState.scrollToItem(listState.layoutInfo.totalItemsCount - 1)
-                }
+                lastItemRequester.bringIntoView()
             }
         }
+
     }
 }
 
