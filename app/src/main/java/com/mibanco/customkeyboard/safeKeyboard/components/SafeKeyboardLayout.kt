@@ -45,12 +45,13 @@ fun SafeKeyboardLayout(
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
     onKeyPress: (String) -> Unit,
     onDelete: () -> Unit,
+    containerModifier: Modifier,
     content: @Composable (
         onOpenKeyboard: () -> Unit,
         onKeyboardDismiss: () -> Unit,
         keyboardPositionMode: KeyboardPositionMode,
         lastItemRequester: BringIntoViewRequester,
-    ) -> Unit
+    ) -> Unit,
 ) {
     val scrollState = rememberScrollState()
     var isKeyboardVisible by remember { mutableStateOf(false) }
@@ -75,7 +76,7 @@ fun SafeKeyboardLayout(
                 verticalArrangement = verticalArrangement,
             ) {
                 Column(
-                    modifier = Modifier.verticalScroll(scrollState),
+                    modifier = containerModifier.verticalScroll(scrollState),
                     horizontalAlignment = horizontalAlignment
                 ) {
                     content(

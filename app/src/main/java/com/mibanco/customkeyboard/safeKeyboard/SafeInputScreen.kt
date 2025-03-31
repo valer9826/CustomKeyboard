@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.Button
@@ -52,46 +53,48 @@ fun SafeInputScreen() {
     SafeKeyboardLayout(
         keyboardType = keyboardType,
         focusManager = focusManager,
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally,
         onKeyPress = { key -> safeCursorState.insertText(key) },
         onDelete = { safeCursorState.deleteText() },
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) { onOpenKeyboard, onKeyboardDismiss, keyboardPositionMode, lastItemRequester ->
+        containerModifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
+        content = { onOpenKeyboard, onKeyboardDismiss, keyboardPositionMode, lastItemRequester ->
 
-        Text("Ingresa tu valor:", fontSize = 20.sp)
-        Spacer(Modifier.height(12.dp))
+            Text(text = "Ingresa tu valor:", fontSize = 20.sp)
+            Spacer(Modifier.height(12.dp))
 
-        repeat(TEST_NUMBER) { index ->
-            val inputRequester = remember { BringIntoViewRequester() }
+            repeat(TEST_NUMBER) { index ->
+                val inputRequester = remember { BringIntoViewRequester() }
 
-            SafePasswordTextField(
-                value = safeCursorState.getText(index),
-                onValueChange = { safeCursorState.setText(index, it) },
-                fieldIndex = index,
-                focusedFieldIndex = focusedFieldIndex,
-                modifier = Modifier.fillMaxWidth(),
-                bringIntoViewRequester = inputRequester,
-                keyboardPositionMode = keyboardPositionMode,
-                onOpenKeyboard = onOpenKeyboard,
-                onKeyboardDismiss = onKeyboardDismiss
-            )
+                SafePasswordTextField(
+                    value = safeCursorState.getText(index),
+                    onValueChange = { safeCursorState.setText(index, it) },
+                    fieldIndex = index,
+                    focusedFieldIndex = focusedFieldIndex,
+                    modifier = Modifier.fillMaxWidth(),
+                    bringIntoViewRequester = inputRequester,
+                    keyboardPositionMode = keyboardPositionMode,
+                    onOpenKeyboard = onOpenKeyboard,
+                    onKeyboardDismiss = onKeyboardDismiss
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        Button(
-            modifier = Modifier.bringIntoViewRequester(lastItemRequester),
-            onClick = {
-                focusManager.clearFocus(force = true)
-                keyboardType =
-                    if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+                Spacer(modifier = Modifier.height(24.dp))
             }
-        ) {
-            Text("Cambiar Teclado")
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-    }
+            Button(
+                modifier = Modifier.bringIntoViewRequester(lastItemRequester),
+                onClick = {
+                    focusManager.clearFocus(force = true)
+                    keyboardType =
+                        if (keyboardType == KeyboardType.Number) KeyboardType.Text else KeyboardType.Number
+                }
+            ) {
+                Text("Cambiar Teclado")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    )
 }
 
 @Composable
