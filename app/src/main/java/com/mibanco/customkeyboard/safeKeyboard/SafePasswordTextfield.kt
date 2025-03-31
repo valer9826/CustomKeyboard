@@ -41,7 +41,6 @@ fun SafePasswordTextField(
     allowCursorPlacement: Boolean = false
 ) {
     var hasFocus by remember { mutableStateOf(false) }
-    var cursorManuallyMoved by remember { mutableStateOf(false) }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isCursorVisible by remember { mutableStateOf(true) }
     var lastInputTime by remember { mutableLongStateOf(System.currentTimeMillis()) }

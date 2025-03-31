@@ -28,6 +28,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+const val TEST_NUMBER = 12
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SafeInputScreen() {
